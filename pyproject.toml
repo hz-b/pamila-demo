@@ -1,0 +1,45 @@
+[build-system]
+requires = [ "poetry-core>=1.0.0",]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "pamila-demo"
+version = "0.0.0"
+description = "digital twin for accelerators"
+authors = [  "Waheedullah Sulaiman Khail", "Pierre Schnizer"]
+license = "GPL-3.0"
+# Todo: change
+homepage = "https://github.com/hz-b/dt4acc"
+documentation = "https://github.com/hz-b/dt4acc"
+repository = "https://github.com/hz-b/dt4acc.git"
+keywords = []
+classifiers = [
+     "Development Status :: 4 - Beta",
+     "Intended Audience :: Science/Research",
+     "License :: OSI Approved :: GNU General Public License (GPL)",
+     "Programming Language :: Python :: 3",
+     "Topic :: Scientific/Engineering :: Physics"
+]
+
+[tool.poetry.dependencies]
+python = ">=3.7"
+jsons = "*"
+pymongo = "*"
+bluesky = "*"
+databroker = "*"
+ophyd = ">=1.6"
+matplotlib = "*"
+pyqt5 = "*"
+
+# bessy ii specific packages
+bact_bessyii_ophyd = "*"
+bact_bessyii_mls_ophyd = "*" # dependency missing in bact_bessyii_ophyd
+ophyd_async = "*" # find which of the packages above import it
+
+# doc packages
+Sphinx = { version = ">=4.2", optional = true }
+sphinx-rtd-theme = { version = ">=1", optional = true }
+sphinxcontrib-napoleon = { version = ">=0.7", optional = true }
+
+[tool.poetry.extras]
+docs = ["Sphinx", "sphinx-rtd-theme", "sphinxcontrib-napoleon"]
