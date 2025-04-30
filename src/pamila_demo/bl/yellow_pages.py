@@ -8,7 +8,7 @@ Todo:
 from enum import Enum
 from typing import Sequence, Union
 
-from src.pamila_demo.interfaces.yellow_pages import YellowPages
+from ..interfaces.yellow_pages import YellowPages
 
 
 class FamilyName(Enum):
