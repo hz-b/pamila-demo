@@ -6,17 +6,17 @@ import itertools
 import logging
 from typing import Dict, Sequence
 
-from pamila_demo.bl.liaison_manager import LiaisonManager
-from pamila_demo.bl.translator_service import TranslatorService
-from pamila_demo.bl.unit_conversion import LinearUnitConversion, EnergyIndependentLinearUnitConversion
-from pamila_demo.bl.yellow_pages import yellow_pages
-from pamila_demo.custom.bessyii.constants import ring_parameters
-from pamila_demo.custom.bessyii.querries import get_magnets
-from pamila_demo.interfaces.liaison_manager import LiaisonManagerBase
-from pamila_demo.interfaces.translator_service import TranslatorServiceBase
-from pamila_demo.interfaces.yellow_pages import YellowPages
-from pamila_demo.model.elementmodel import MagnetElementSetup
-from pamila_demo.model.identifiers import DevicePropertyID, LatticeElementPropertyID, ConversionID
+from .liaison_manager import LiaisonManager
+from .translator_service import TranslatorService
+from .unit_conversion import LinearUnitConversion, EnergyIndependentLinearUnitConversion
+from .yellow_pages import yellow_pages
+from ..custom.bessyii.constants import ring_parameters
+from ..custom.bessyii.querries import get_magnets
+from ..interfaces.liaison_manager import LiaisonManagerBase
+from ..interfaces.translator_service import TranslatorServiceBase
+from ..interfaces.yellow_pages import YellowPages
+from ..model.elementmodel import MagnetElementSetup
+from ..model.identifiers import DevicePropertyID, LatticeElementPropertyID, ConversionID
 
 logger = logging.getLogger("pamila")
 
