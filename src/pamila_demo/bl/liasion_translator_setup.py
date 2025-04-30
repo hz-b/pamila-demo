@@ -10,7 +10,7 @@ from .liaison_manager import LiaisonManager
 from .translator_service import TranslatorService
 from .unit_conversion import LinearUnitConversion, EnergyIndependentLinearUnitConversion
 from .yellow_pages import yellow_pages
-from ..custom.bessyii.constants import ring_parameters
+from ..custom.bessyii.constants import ring_parameters, cavity_names
 from ..custom.bessyii.querries import get_magnets
 from ..interfaces.liaison_manager import LiaisonManagerBase
 from ..interfaces.translator_service import TranslatorServiceBase
@@ -238,26 +238,26 @@ def build_managers(
     inverse_lut.update(quad_updates)
 
     # Cavities and master clock
-    # inverse_lut.update(
-    #     {
-    #         DevicePropertyID(device_name=name, property="frequency"): (
-    #             LatticeElementPropertyID(element_name=name, property="frequency"),
-    #         )
-    #         for name in cavity_names
-    #     }
-    # )
-    # inverse_lut.update(
-    #     {
-    #         DevicePropertyID(
-    #             device_name="master_clock", property="reference_frequency"
-    #         ): tuple(
-    #             [
-    #                 LatticeElementPropertyID(element_name=name, property="frequency")
-    #                 for name in cavity_names
-    #             ]
-    #         )
-    #     }
-    # )
+    inverse_lut.update(
+        {
+            DevicePropertyID(device_name=name, property="frequency"): (
+                LatticeElementPropertyID(element_name=name, property="frequency"),
+            )
+            for name in cavity_names
+        }
+    )
+    inverse_lut.update(
+        {
+            DevicePropertyID(
+                device_name="master_clock", property="reference_frequency"
+            ): tuple(
+                [
+                    LatticeElementPropertyID(element_name=name, property="frequency")
+                    for name in cavity_names
+                ]
+            )
+        }
+    )
 
     lm = LiaisonManager(forward_lut=forward_lut, inverse_lut=inverse_lut)
 
@@ -367,35 +367,35 @@ def build_managers(
     # )
 
     # cavities
-    # translator_lut.update(
-    #     {
-    #         ConversionID(
-    #             lattice_property_id=LatticeElementPropertyID(
-    #                 element_name=name, property="frequency"
-    #             ),
-    #             device_property_id=DevicePropertyID(
-    #                 device_name=name, property="frequency"
-    #             ),
-    #         ): LinearUnitConversion(
-    #             slope=1e-3, intercept=0.0
-    #         )  # BESSY II uses kHz for the cavities clock
-    #         for name in cavity_names
-    #     }
-    # )
+    translator_lut.update(
+        {
+            ConversionID(
+                lattice_property_id=LatticeElementPropertyID(
+                    element_name=name, property="frequency"
+                ),
+                device_property_id=DevicePropertyID(
+                    device_name=name, property="frequency"
+                ),
+            ): LinearUnitConversion(
+                slope=1e-3, intercept=0.0
+            )  # BESSY II uses kHz for the cavities clock
+            for name in cavity_names
+        }
+    )
 
-    # translator_lut.update(
-    #     {
-    #         ConversionID(
-    #             LatticeElementPropertyID(element_name=name, property="frequency"),
-    #             DevicePropertyID(
-    #                 device_name="master_clock", property="reference_frequency"
-    #             ),
-    #         ): LinearUnitConversion(
-    #             slope=1e-3, intercept=0.0
-    #         )  # BESSY II uses kHz for the master clock
-    #         for name in cavity_names
-    #     }
-    # )
+    translator_lut.update(
+        {
+            ConversionID(
+                LatticeElementPropertyID(element_name=name, property="frequency"),
+                DevicePropertyID(
+                    device_name="master_clock", property="reference_frequency"
+                ),
+            ): LinearUnitConversion(
+                slope=1e-3, intercept=0.0
+            )  # BESSY II uses kHz for the master clock
+            for name in cavity_names
+        }
+    )
 
     tm = TranslatorService(translator_lut)
     return lm, tm
