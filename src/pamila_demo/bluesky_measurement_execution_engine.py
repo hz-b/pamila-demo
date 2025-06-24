@@ -63,9 +63,10 @@ def commands_plan(
         # todo: revisit how to address reading detectors
         #       also in the command language
         # read all devices
+        # yield from bps.sleep(2.0)
         yield from bps.repeat(
             functools.partial(bps.trigger_and_read, all_dev),
-            num=3
+            num=1
         )
 
 

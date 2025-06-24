@@ -19,6 +19,7 @@ from bact_bessyii_ophyd.devices.pp.bpm.bpm import BPM
 from ophyd.status import SubscriptionStatus, AndStatus
 
 from pamila_demo.custom.bessyii.constants import special_pvs
+from pamila_demo.bl.yellow_pages import yellow_pages
 
 
 class SteererCurrent(PVPositionerPC):
@@ -33,7 +34,7 @@ class SteererCurrent(PVPositionerPC):
     readback = Cpt(EpicsSignalRO, ":rdbk")
 
 
-class SteererDeltaCurrent(Device):
+class DeltaCurrent(Device):
     def set(self, diff_value):
         value = self.parent.set_current_at_start.get() + diff_value
         return self.parent.current.set(value)
@@ -49,7 +50,7 @@ class Steerer(Device):
     """
 
     current = Cpt(SteererCurrent, "", name="cur")
-    delta_set_current = Cpt(SteererDeltaCurrent, suffix="", name="delta_cur")
+    delta_set_current = Cpt(DeltaCurrent, suffix="", name="delta_cur")
     set_current_at_start = Cpt(Signal,  name="at_start")
 
     def stage(self) -> List[object]:
@@ -64,6 +65,40 @@ class Steerer(Device):
             shall one reset the value to the start current?
         """
         return super().unstage()
+
+
+class QuadrupoleCurrent(PVPositionerPC):
+    setpoint = Cpt(EpicsSignal, ":set")
+    readback = Cpt(EpicsSignalRO, ":rdbk")
+
+
+class QuadrupolePC(Device):
+    """Steerer power converter with current
+
+    Real steerers will have extra signals: e.g. state
+    Typically the states  would be checked during
+    staging the devices: e.g. to detect early that a
+    power converter is off etc.
+    """
+
+    current = Cpt(QuadrupoleCurrent, "", name="cur")
+    delta_set_current = Cpt(DeltaCurrent, suffix="", name="delta_cur")
+    set_current_at_start = Cpt(Signal,  name="at_start")
+
+    def stage(self) -> List[object]:
+        r = super().stage()
+        self.set_current_at_start.put(self.current.setpoint.get())
+        return r
+
+    def unstage(self) -> List[object]:
+        """
+
+        Todo:
+            shall one reset the value to the start current?
+        """
+        return super().unstage()
+
+
 
 
 class MasterClockDiffFrequency(Device):
@@ -105,12 +140,12 @@ class TuneSignal(Device):
     sig = Cpt(EpicsSignalRO, ":tune")
 
     def trigger(self):
-        def cb(**kwargs):
-            print(f"Received new tune data {self.sig.name}")
-            return True
+         def cb(**kwargs):
+             print(f"Received new tune data {self.sig.name}")
+             return True
 
-        print(f"Received new tune data {self.sig.name}")
-        return SubscriptionStatus(self.sig, cb, run=False, timeout=5)
+         print(f"Received new tune data {self.sig.name}")
+         return SubscriptionStatus(self.sig, cb, run=False, timeout=5)
 
 class Tunes(Device):
     x = Cpt(TuneSignal, ":x")
@@ -121,7 +156,10 @@ class Tunes(Device):
 
 def setup(device_ids: Sequence[str], prefix="Anonym:"):
     """
-    Todo:  retrieve steerer names from some service
+    Todo:
+        * retrieve steerer names from some service
+        * use this a factory for creating the device (stubs) that we need later on
+
     """
     class SteererCollection(Device):
         """ """
@@ -129,6 +167,7 @@ def setup(device_ids: Sequence[str], prefix="Anonym:"):
         col = DynamicDeviceComponent(
             {
                 dev_name: (Steerer, dev_name, dict(lazy=False))
+                # Todo: get the steerer names from some other source
                 for dev_name in device_ids
             },
         )
@@ -145,10 +184,31 @@ def setup(device_ids: Sequence[str], prefix="Anonym:"):
         if not st.connected:
             steerers.wait_for_connection(timeout=5)
 
+    # do we need a quadrupole collection
+    # I guess: I have already san ophyd-async based one ...
+    # next step
 
+    class QuadrupolesPCCollection(Device):
+        """ """
+
+        col = DynamicDeviceComponent(
+            {
+                dev_name: (QuadrupolePC, dev_name, dict(lazy=False))
+                # Todo: get the steerer names from some other source
+                for dev_name in device_ids
+            },
+        )
+
+    quadrupoles = QuadrupolesPCCollection(prefix, name="qd_col")
     master_clock = MasterClock(f'{prefix}{special_pvs["master_clock"]}', name="mc")
     tunes = Tunes(f"{prefix}beam:twiss", name="tune")
-    return dict(bpms=bpms, steerers=steerers, master_clock=master_clock, tunes=tunes)
+    return dict(
+        bpms=bpms,
+        steerers=steerers,
+        master_clock=master_clock,
+        quadrupole_pcs=quadrupoles,
+        tunes=tunes
+    )
 
 
 __all__ = ["Steerer", "SteererCurrent"]

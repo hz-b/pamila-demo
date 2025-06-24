@@ -29,6 +29,8 @@ class YellowPages(YellowPages):
 
         or use:
         get(family_name: str)
+
+        separate yellow pages for lattice elements and devices
     """
     def __init__(self, d: dict):
         self._d = d
@@ -46,6 +48,12 @@ class YellowPages(YellowPages):
 
     def quadrupole_names(self) -> Sequence[str]:
         return self.get("quadrupoles")
+
+    def tune_correction_quadrupole_names(self) -> Sequence[str]:
+        quads = self.quadrupole_names()
+        # Todo: Bessy specific guess
+        # should be dedicated field
+        return [name for name in quads if name[1] in ["3", "4"]]
 
     def sextupole_names(self) -> Sequence[str]:
         return self.get("sextupoles")

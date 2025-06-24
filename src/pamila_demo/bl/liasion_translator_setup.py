@@ -151,7 +151,7 @@ def build_managers(
         for info in infos
         if info.name in yp.vertical_steerer_names()
     })
-    # steerers ... kick relative to the already set one
+    # steerers ... kick relative to the already set one 
     forward_lut = {
         LatticeElementPropertyID(element_name=info.name[1:], property="delta_x_kick"):
             DevicePropertyID(device_name=info.pc, property="delta_set_current")
@@ -165,6 +165,12 @@ def build_managers(
         for info in infos
         if info.name in yp.vertical_steerer_names()
     })
+    forward_lut = {
+        LatticeElementPropertyID(element_name=info.name, property="delta_main_strength"):
+            DevicePropertyID(device_name=info.pc, property="delta_set_current")
+        for info in infos
+        if info.name in yp.quadrupole_names()
+    }
     # Test that steerer power converters only feed one before going to the next step
     for key in inverse_lut:
         corr_pc = key.device_name
@@ -300,6 +306,21 @@ def build_managers(
                     property="main_strength",
                 ),
                 DevicePropertyID(device_name=info.pc, property="set_current"),
+            ):
+            # todo: check for the correct conversion
+                construct_energy_independent_linear_conversion(slope=info.magnetic_strength)
+            for info in infos
+            if info.type in ["Sextupole", "Quadrupole"]
+        }
+    )
+    translator_lut.update(
+        {
+            ConversionID(
+                LatticeElementPropertyID(
+                    element_name=extract_host_element_name(info.name, yp=yp),
+                    property="delta_main_strength",
+                ),
+                DevicePropertyID(device_name=info.pc, property="delta_set_current"),
             ):
             # todo: check for the correct conversion
                 construct_energy_independent_linear_conversion(slope=info.magnetic_strength)
