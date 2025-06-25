@@ -1,3 +1,4 @@
+import asyncio
 from typing import Sequence
 
 from bluesky import RunEngine
@@ -11,7 +12,7 @@ from ...custom.epics.mexec.bluesky_measurement_engine import setup
 from ...model.command import Command, BehaviourOnError, CommandSequence
 
 
-async def tune(*, quadrupole_names: Sequence[str], measurement_values: Sequence[float]):
+def tune(*, quadrupole_names: Sequence[str], measurement_values: Sequence[float]):
     cmds_on_lattice = []
     for name in quadrupole_names:
         for val in measurement_values:
@@ -33,7 +34,10 @@ async def tune(*, quadrupole_names: Sequence[str], measurement_values: Sequence[
     tunes = devices["tunes"]
     quadrupole_pcs = devices["quadrupole_pcs"]
 
-    await quadrupole_pcs.connect()
+    async def connect():
+        await quadrupole_pcs.connect()
+    asyncio.run(connect())
+
     if not tunes.connected:
         tunes.wait_for_connection(timeout=2.0)
 

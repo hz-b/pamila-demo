@@ -1,7 +1,3 @@
-import asyncio
-
-from typing_extensions import Unpack
-
 from bact_bessyii_mls_ophyd.devices.utils.multiplexer_for_settable_devices import (
     _MultiplexerItemProxy,
 )
@@ -10,7 +6,6 @@ from bact_bessyii_mls_ophyd.devices.utils.power_converter import (
 )
 
 from bluesky.protocols import Movable, Status
-
 from ophyd_async.core import AsyncStatus, StandardReadable
 
 
@@ -39,9 +34,12 @@ class DiffCurrent(StandardReadable, Movable):
 
     @AsyncStatus.wrap
     async def set(self, diff_value) -> Status:
-        assert self.reference_value is not None
+        assert (
+            self.reference_value is not None,
+            NotInitalisedReferenceValue("Power converter diff value was not set"),
+        )
         value = diff_value + self.reference_value
-        return super().set(value)
+        return self.parent.set(value)
 
 
 class MultiplexerItemProxy(_MultiplexerItemProxy):
