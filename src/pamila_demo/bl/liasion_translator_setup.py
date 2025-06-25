@@ -7,7 +7,8 @@ import itertools
 import logging
 from typing import Dict, Sequence
 
-from .liaison_manager import LiaisonManager
+from pamila_demo.bl.liaison_manager_with_grouping import LiaisonManagerWithGrouping, DevicePropertiesLUTCollection, \
+    DevicesPropertiesLUT, LatticeElementsPropertiesCollection, LatticeElementPropertiesLUT
 from .translator_service import TranslatorService
 from .unit_conversion import LinearUnitConversion, EnergyIndependentLinearUnitConversion
 from ..custom.bessyii.constants import ring_parameters, cavity_names
@@ -147,63 +148,66 @@ def build_managers() -> (YellowPagesBase, LiaisonManagerBase, TranslatorServiceB
 
     # first for steerers : for AT these are angles applied to the host magnet
     # I use that I know one pc goes to one steerer
-    inverse_lut = {
-        DevicePropertyID(device_name=info.pc, property="set_current"):
-            LatticeElementPropertyID(element_name=info.name[1:], property="x_kick")
-        for info in infos
-        if info.name in yp.horizontal_steerer_names()
-    }
-    inverse_lut.update(
-        {
-            DevicePropertyID(device_name=info.pc, property="set_current"):
-                LatticeElementPropertyID(element_name=info.name[1:], property="y_kick")
-            for info in infos
-            if info.name in yp.vertical_steerer_names()
-        }
+    hst_inv_lut = DevicePropertiesLUTCollection(
+        name = "horizontal steerer families, inverse lookup table",
+        col=[
+        DevicesPropertiesLUT(device_name=info.pc, lut=dict(
+            set_current=LatticeElementPropertyID(element_name=info.name[1:], property="x_kick"),
+            delta_set_current=LatticeElementPropertyID(element_name=info.name[1:], property="delta_x_kick"),
+        ))
+        for info in infos if info.name in yp.horizontal_steerer_names()
+        ]
+    )
+    vst_inv_lut = DevicePropertiesLUTCollection(
+        name = "vertical steerer families, inverse lookup table",
+        col=[
+        DevicesPropertiesLUT(device_name=info.pc, lut=dict(
+            set_current=LatticeElementPropertyID(element_name=info.name[1:], property="y_kick"),
+            delta_set_current=LatticeElementPropertyID(element_name=info.name[1:], property="delta_y_kick"),
+        ))
+        for info in infos if info.name in yp.vertical_steerer_names()
+        ]
     )
 
-    # steerers ... direct kick
-    forward_lut = {
-        LatticeElementPropertyID(element_name=info.name[1:], property="x_kick"):
-            DevicePropertyID(device_name=info.pc, property="set_current")
-        for info in infos
-        if info.name in yp.horizontal_steerer_names()
-    }
-    forward_lut.update({
-        LatticeElementPropertyID(element_name=info.name[1:], property="y_kick"):
-            DevicePropertyID(device_name=info.pc, property="set_current")
-        for info in infos
-        if info.name in yp.vertical_steerer_names()
-    })
-    # steerers ... kick relative to the already set one 
-    forward_lut = {
-        LatticeElementPropertyID(element_name=info.name[1:], property="delta_x_kick"):
-            DevicePropertyID(device_name=info.pc, property="delta_set_current")
-        for info in infos
-        if info.name in yp.horizontal_steerer_names()
-    }
-    forward_lut.update({
-        LatticeElementPropertyID(element_name=info.name[1:], property="delta_y_kick"):
-            DevicePropertyID(device_name=info.pc, property="delta_set_current")
+    hst_fwd_lut = LatticeElementsPropertiesCollection(
+        name="horizontal steerers, forward lookup table",
+        col=[
+            # this mapping is AT simulation engine and BESSY II
+            LatticeElementPropertiesLUT(element_name=info.name[1:], lut=dict(
+                x_kick=DevicePropertyID(device_name=info.pc, property="set_current"),
+                delta_x_kick=DevicePropertyID(device_name=info.pc, property="delta_set_current"),
+            ))
+            for info in infos
+            if info.name in yp.horizontal_steerer_names()
+        ]
+    )
+    vst_fwd_lut = LatticeElementsPropertiesCollection(
+        name="vertical steerers forward lut",
+        col=[
+            # this mapping is AT simulation engine and BESSY II
+            LatticeElementPropertiesLUT(element_name=info.name[1:], lut=dict(
+                y_kick=DevicePropertyID(device_name=info.pc, property="set_current"),
+                delta_y_kick=DevicePropertyID(device_name=info.pc, property="delta_set_current"),
+            ))
+            for info in infos
+            if info.name in yp.vertical_steerer_names()
+        ]
+    )
 
-        for info in infos
-        if info.name in yp.vertical_steerer_names()
-    })
-    forward_lut.update({
-        LatticeElementPropertyID(element_name=info.name, property="delta_main_strength"):
-            DevicePropertyID(device_name=info.pc, property="delta_set_current")
-        for info in infos
-        if info.name in yp.quadrupole_names() +  yp.sextupole_names()
-    })
-    # Test that steerer power converters only feed one before going to the next step
-    for key in inverse_lut:
-        corr_pc = key.device_name
-        magnet_names = power_converter_feeds[corr_pc]
-        if len(magnet_names) != 1:
-            raise AssertionError(
-                f"Found {magnet_names} magnets on assumed corrector power supply {corr_pc}"
-            )
+    mag_fwd_lut = LatticeElementsPropertiesCollection(
+        name="main magnet lut",
+        col=[
+            # this mapping is AT simulation engine and BESSY II
+            LatticeElementPropertiesLUT(element_name=info.name, lut=dict(
+                main_strength=DevicePropertyID(device_name=info.pc, property="set_current"),
+                delta_main_strength=DevicePropertyID(device_name=info.pc, property="delta_set_current"),
+            ))
+            for info in infos
+            if info.name in yp.quadrupole_names() +  yp.sextupole_names()
+        ]
+    )
 
+    forward_lut = {}
     forward_lut.update(
         {
             LatticeElementPropertyID(element_name="master_clock", property="delta_frequency"):
@@ -212,7 +216,6 @@ def build_managers() -> (YellowPagesBase, LiaisonManagerBase, TranslatorServiceB
     )
     pass
     # quadrupoles and sextupoles
-    steerer_pc_names = [key.device_name for key in inverse_lut]
     # inverse_lut.update(
     #     {
     #         DevicePropertyID(device_name=pc_name, property="set_current"):
@@ -254,19 +257,20 @@ def build_managers() -> (YellowPagesBase, LiaisonManagerBase, TranslatorServiceB
     # Todo:
     #     is that appropriate ?
     #     Should one rather use a handler for lattice elements
-    quad_updates = dict()
-    for axis_name in "x", "y":
-        quad_updates.update(
-            {
-                DevicePropertyID(device_name=info.name, property=axis_name):
-                    LatticeElementPropertyID(
-                        element_name=info.name, property=axis_name
-                    )
-                for info in infos
-                if info.type in ["Sextupole", "Quadrupole"]
-            }
-        )
-    inverse_lut.update(quad_updates)
+    mag_inv_lut = DevicePropertiesLUTCollection(
+        name="main magnet inverse collection",
+        col=[
+            DevicesPropertiesLUT(
+                device_name=info.name,
+                lut=dict(
+                    x=LatticeElementPropertyID(element_name=info.name, property="x"),
+                    y=LatticeElementPropertyID(element_name=info.name, property="y")
+                )
+            )
+            for info in infos if info.type in ["Sextupole", "Quadrupole"]
+        ]
+    )
+    inverse_lut =  {}
 
     # Cavities and master clock
     inverse_lut.update(
@@ -290,7 +294,11 @@ def build_managers() -> (YellowPagesBase, LiaisonManagerBase, TranslatorServiceB
         }
     )
 
-    lm = LiaisonManager(forward_lut=forward_lut, inverse_lut=inverse_lut)
+    lm = LiaisonManagerWithGrouping(
+        forward_family_luts=[hst_fwd_lut, vst_fwd_lut, mag_fwd_lut],
+        inverse_family_luts=[hst_inv_lut, vst_inv_lut, mag_inv_lut],
+        forward_lut=forward_lut, inverse_lut=inverse_lut
+    )
 
     # start to build it for the magnets ... power converter feed
     translator_lut = {

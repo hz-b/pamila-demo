@@ -7,6 +7,7 @@ from pamila_demo.model.identifiers import LatticeElementPropertyID, DeviceProper
 logger = logging.getLogger("pamila")
 
 
+
 class LiaisonManager(LiaisonManagerBase):
     """
     Todo:
@@ -18,8 +19,12 @@ class LiaisonManager(LiaisonManagerBase):
               user when searching for it
 
     """
-    def __init__(self, forward_lut: Mapping[LatticeElementPropertyID, DevicePropertyID],
-            inverse_lut: Mapping[DevicePropertyID, LatticeElementPropertyID], ):
+    def __init__(
+            self,
+            forward_family_lut, Mapping,
+            forward_lut: Mapping[LatticeElementPropertyID, DevicePropertyID],
+            inverse_lut: Mapping[DevicePropertyID, LatticeElementPropertyID],
+        ):
         self.forward_lut = forward_lut
         self.inverse_lut = inverse_lut
 
