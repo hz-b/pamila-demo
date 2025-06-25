@@ -1,40 +1,33 @@
 from typing import List
 
-from ophyd import (
-    Component as Cpt,
-    Device,
-    EpicsSignal,
-    EpicsSignalRO,
-    PVPositionerPC,
-    Signal,
+from bact_bessyii_mls_ophyd.devices.utils.pv_positioner_like_utils import (
+    PVPositionerIsClose,
 )
+from .diff_channel import DiffChannel
+from bluesky.protocols import Movable, Status
+from ophyd_async.core import AsyncStatus, StandardReadable
 
 
-class MasterClockDiffFrequency(Device):
+class MasterClock(StandardReadable):
     """
-    todo: same apprache as steerer delta current
-          merge
+    Warning:
+            This code is not yet tested!
     """
 
-    def set(self, diff_value):
-        value = self.parent.set_frequency_at_start.get() + diff_value
-        print(f"Setting frequncy to {value}: diff {diff_value}")
-        return self.parent.frequency.set(value)
+    def __init__(self, prefix, name: str = "", *, eps_rel=1e-6, eps_abs=1):
+        with self.add_children_as_readables():
+            self.frequency = PVPositionerIsClose(
+                prefix, name="f{name}-freq", setpoint_suffix="freq", readback_suffix="freq", eps_abs=eps_abs, eps_rel=eps_rel
+            )
+            self.delta_frequency = DiffChannel(
+                parent=self, name="f{name}-{delta_freq} "
+            )
+        super().__init__(name=name)
+        self.set_frequency_at_start = None
 
-
-class MasterClockFrequency(PVPositionerPC):
-    setpoint = Cpt(EpicsSignal, ":freq")
-    readback = Cpt(EpicsSignalRO, ":freq")
-
-
-class MasterClock(Device):
-    frequency = Cpt(MasterClockFrequency, "", name="freq")
-    delta_frequency = Cpt(MasterClockDiffFrequency, suffix="", name="delta_freq")
-    set_frequency_at_start = Cpt(Signal, name="at_start")
-
-    def stage(self) -> List[object]:
-        r = super().stage()
-        self.set_frequency_at_start.put(self.frequency.setpoint.get())
+    async def stage(self):
+        r = await super().stage()
+        self.set_frequency_at_start = await self.frequency.setpoint.read_value()
         return r
 
     def unstage(self) -> List[object]:

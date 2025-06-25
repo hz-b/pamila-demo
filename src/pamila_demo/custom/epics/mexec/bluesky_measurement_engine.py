@@ -3,17 +3,16 @@
 import asyncio
 from typing import Sequence
 
+from bact_bessyii_mls_ophyd.devices.pp.orbit import PPOrbit
 from bact_bessyii_mls_ophyd.devices.utils.multiplexer_for_settable_devices import (
     MultiplexerProxy,
 )
-
-# currently in an other package: could be distributed here too
-from bact_bessyii_ophyd.devices.pp.bpm.bpm import BPM
-from bact_bessyii_ophyd.devices.raw.tune import Tunes
 from .master_clock import MasterClock
+from .tunes import Tunes
+
 from ...bessyii.constants import special_pvs
 from ....bl.liasion_translator_setup import load_managers
-from .power_converters import PowerConverter, MultiplexerItemProxy
+from .power_converter import PowerConverter, MultiplexerItemProxy
 
 
 def setup(device_ids: Sequence[str], prefix="Anonym:"):
@@ -76,11 +75,16 @@ def setup(device_ids: Sequence[str], prefix="Anonym:"):
         ItemProxy=MultiplexerItemProxy,
     )
 
-    bpms = BPM(f"{prefix}MDIZ2T5G", name="bpm")
+    orbit = PPOrbit(f"{prefix}MDIZ2T5G:", name="orbit")
     master_clock = MasterClock(f'{prefix}{special_pvs["master_clock"]}', name="mc")
     tunes = Tunes(f"{prefix}beam:twiss", name="tune")
+    async def connect():
+        await tunes.connect()
+        r = await tunes.read()
+    #asyncio.run(connect())
+
     return dict(
-        bpms=bpms,
+        orbit=orbit,
         steerer_pcs=steerers,
         master_clock=master_clock,
         quadrupole_pcs=quadrupoles,
@@ -88,5 +92,3 @@ def setup(device_ids: Sequence[str], prefix="Anonym:"):
         tunes=tunes,
     )
 
-
-__all__ = ["Steerer", "SteererCurrent"]
