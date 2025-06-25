@@ -2,6 +2,7 @@
 Todo:
     rework to use proper data
 """
+import functools
 import itertools
 import logging
 from typing import Dict, Sequence
@@ -9,12 +10,12 @@ from typing import Dict, Sequence
 from .liaison_manager import LiaisonManager
 from .translator_service import TranslatorService
 from .unit_conversion import LinearUnitConversion, EnergyIndependentLinearUnitConversion
-from .yellow_pages import yellow_pages
 from ..custom.bessyii.constants import ring_parameters, cavity_names
 from ..custom.bessyii.querries import get_magnets
 from ..interfaces.liaison_manager import LiaisonManagerBase
 from ..interfaces.translator_service import TranslatorServiceBase
-from ..interfaces.yellow_pages import YellowPages
+from ..interfaces.yellow_pages import YellowPages as YellowPagesBase
+from ..bl.yellow_pages import YellowPages
 from ..model.elementmodel import MagnetElementSetup
 from ..model.identifiers import DevicePropertyID, LatticeElementPropertyID, ConversionID
 
@@ -95,13 +96,22 @@ def construct_energy_independent_linear_conversion(
     )
 
 
-def build_managers(
-        yp: YellowPages = yellow_pages(),
-) -> (LiaisonManagerBase, TranslatorServiceBase):
+@functools.lru_cache(maxsize=1)
+def load_managers() -> (YellowPagesBase, LiaisonManagerBase, TranslatorServiceBase):
+    """
+
+    Todo:
+        appropriate to separate caching from loading?
+    """
+    return build_managers()
+
+
+def build_managers() -> (YellowPagesBase, LiaisonManagerBase, TranslatorServiceBase):
     """A first poor mans implementation of liasion manager and Translation service for BessyII
 
     Todo:
         Which info is already in database and better obtained from database?
+
     """
     infos = magnet_infos_from_db()
 
@@ -119,6 +129,20 @@ def build_managers(
         for pc_name in power_converter_names
     }
 
+    yp = YellowPages(
+        dict(
+            quadrupoles=[elem.name for elem in infos if elem.type == "Quadrupole"],
+            sextupoles=[elem.name for elem in infos if elem.type == "Sextupole"],
+            horizontal_steerers=[elem.name for elem in infos if elem.type == "Steerer" and elem.name[0] == "H"],
+            vertical_steerers=[elem.name for elem in infos if elem.type == "Steerer" and elem.name[0] == "V"],
+            master_clock="master_clock",
+            # todo: should power converter sources be a separate part here
+            quadrupole_pcs=tuple(set([elem.pc for elem in infos if elem.type == "Quadrupole"])),
+            sextupole_pcs=tuple(tuple(set([elem.pc for elem in infos if elem.type == "Sextupole"]))),
+            horizontal_steerer_pcs=tuple(set([elem.pc for elem in infos if elem.type == "Steerer" and elem.name[0] == "H"])),
+            vertical_steerer_pcs = tuple(set([elem.pc for elem in infos if elem.type == "Steerer" and elem.name[0] == "V"]))
+        )
+    )
     # todo: check if property must be different for the different magnets ...
 
     # first for steerers : for AT these are angles applied to the host magnet
@@ -165,12 +189,12 @@ def build_managers(
         for info in infos
         if info.name in yp.vertical_steerer_names()
     })
-    forward_lut = {
+    forward_lut.update({
         LatticeElementPropertyID(element_name=info.name, property="delta_main_strength"):
             DevicePropertyID(device_name=info.pc, property="delta_set_current")
         for info in infos
-        if info.name in yp.quadrupole_names()
-    }
+        if info.name in yp.quadrupole_names() +  yp.sextupole_names()
+    })
     # Test that steerer power converters only feed one before going to the next step
     for key in inverse_lut:
         corr_pc = key.device_name
@@ -186,6 +210,7 @@ def build_managers(
                 DevicePropertyID(device_name="master_clock", property="delta_frequency")
         }
     )
+    pass
     # quadrupoles and sextupoles
     steerer_pc_names = [key.device_name for key in inverse_lut]
     # inverse_lut.update(
@@ -419,7 +444,7 @@ def build_managers(
     )
 
     tm = TranslatorService(translator_lut)
-    return lm, tm
+    return yp, lm, tm
 
 
 if __name__ == "__main__":

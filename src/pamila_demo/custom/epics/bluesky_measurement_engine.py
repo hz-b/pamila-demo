@@ -19,7 +19,6 @@ from bact_bessyii_ophyd.devices.pp.bpm.bpm import BPM
 from ophyd.status import SubscriptionStatus, AndStatus
 
 from pamila_demo.custom.bessyii.constants import special_pvs
-from pamila_demo.bl.yellow_pages import yellow_pages
 
 
 class SteererCurrent(PVPositionerPC):

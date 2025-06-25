@@ -59,7 +59,13 @@ class YellowPages(YellowPages):
         return self.get("sextupoles")
 
 
-def yellow_pages():
+def yellow_pages_obsolete():
+    """
+    Todo:
+        to be produced by data from database
+        or if so from config ...
+    """
+    raise NotImplementedError("Use build_managers instead")
     # standard quadrupoles
     quadrupoles = [
         f"Q{family}M{child}{sector_type}{sector}R"

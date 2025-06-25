@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "pamila-demo"
-version = "0.0.0"
+version = "0.0.1"
 description = "digital twin for accelerators"
 authors = [  "Waheedullah Sulaiman Khail", "Pierre Schnizer"]
 license = "GPL-3.0"
@@ -27,6 +27,7 @@ jsons = "*"
 pymongo = "*"
 bluesky = "*"
 databroker = "*"
+# soon to only depend on ophyd async
 ophyd = ">=1.6"
 matplotlib = "*"
 pyqt5 = "*"
