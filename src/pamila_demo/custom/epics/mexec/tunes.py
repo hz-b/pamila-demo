@@ -1,13 +1,27 @@
+from typing import List
+
+from ophyd import (
+    Component as Cpt,
+    Device,
+    EpicsSignal,
+    EpicsSignalRO,
+    PVPositionerPC,
+    Signal,
+)
+from ophyd.status import AndStatus, SubscriptionStatus
+
+
 class TuneSignal(Device):
     sig = Cpt(EpicsSignalRO, ":tune")
 
     def trigger(self):
-         def cb(**kwargs):
-             print(f"Received new tune data {self.sig.name}")
-             return True
+        def cb(**kwargs):
+            print(f"Received new tune data {self.sig.name}")
+            return True
 
-         print(f"Received new tune data {self.sig.name}")
-         return SubscriptionStatus(self.sig, cb, run=False, timeout=5)
+        print(f"Received new tune data {self.sig.name}")
+        return SubscriptionStatus(self.sig, cb, run=False, timeout=5)
+
 
 class Tunes(Device):
     x = Cpt(TuneSignal, ":x")
