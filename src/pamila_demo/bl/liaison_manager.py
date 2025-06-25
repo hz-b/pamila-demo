@@ -8,6 +8,16 @@ logger = logging.getLogger("pamila")
 
 
 class LiaisonManager(LiaisonManagerBase):
+    """
+    Todo:
+        consider internally to represent classes of devices with a certain functionallity
+
+        So internally have
+            * classes of devices providing similar properties
+            * this can be used when searching for suggesting alternatives to the
+              user when searching for it
+
+    """
     def __init__(self, forward_lut: Mapping[LatticeElementPropertyID, DevicePropertyID],
             inverse_lut: Mapping[DevicePropertyID, LatticeElementPropertyID], ):
         self.forward_lut = forward_lut
