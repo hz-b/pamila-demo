@@ -184,6 +184,7 @@ def build_managers() -> (YellowPagesBase, LiaisonManagerBase, TranslatorServiceB
     }
     forward_lut.update({
         LatticeElementPropertyID(element_name=info.name[1:], property="delta_y_kick"):
+        # Todo: needs rewrite
             DevicePropertyID(device_name=info.pc, property="delta_set_current")
 
         for info in infos

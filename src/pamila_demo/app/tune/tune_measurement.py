@@ -7,11 +7,11 @@ from ophyd import Signal
 
 from ...bl.set_command_rewriter import set_command_rewriter
 from ...bluesky_measurement_execution_engine import BlueskyMeasurementExecutionEngine
-from ...custom.epics.bluesky_measurement_engine import setup
+from ...custom.epics.mexec.bluesky_measurement_engine import setup
 from ...model.command import Command, BehaviourOnError, CommandSequence
 
 
-def tune(*, quadrupole_names: Sequence[str], measurement_values: Sequence[float]):
+async def tune(*, quadrupole_names: Sequence[str], measurement_values: Sequence[float]):
     cmds_on_lattice = []
     for name in quadrupole_names:
         for val in measurement_values:
@@ -33,8 +33,7 @@ def tune(*, quadrupole_names: Sequence[str], measurement_values: Sequence[float]
     tunes = devices["tunes"]
     quadrupole_pcs = devices["quadrupole_pcs"]
 
-    if not quadrupole_pcs.connected:
-        quadrupole_pcs.wait_for_connection(timeout=2.0)
+    await quadrupole_pcs.connect()
     if not tunes.connected:
         tunes.wait_for_connection(timeout=2.0)
 
