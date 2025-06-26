@@ -15,14 +15,14 @@ from ...model.command import Command, BehaviourOnError, CommandSequence
 def orm(*, horizontal_steerer_names: Sequence[str], vertical_steerer_names: Sequence[str],
         measurement_values: Sequence[float]):
     cmds_on_lattice = []
-    for name in horizontal_steerer_names:
+    for name in horizontal_steerer_names[:2]:
         for val in measurement_values:
             cmds_on_lattice.append(
                 Command(id=name, property="delta_x_kick", value=val, behaviour_on_error=BehaviourOnError.stop))
-    for name in vertical_steerer_names:
-        for val in measurement_values:
-            cmds_on_lattice.append(
-                Command(id=name, property="delta_y_kick", value=val, behaviour_on_error=BehaviourOnError.stop))
+    #for name in vertical_steerer_names[:2]:
+    #    for val in measurement_values:
+    #        cmds_on_lattice.append(
+    #            Command(id=name, property="delta_y_kick", value=val, behaviour_on_error=BehaviourOnError.stop))
 
     command_rewritter = set_command_rewriter()
 
@@ -43,7 +43,12 @@ def orm(*, horizontal_steerer_names: Sequence[str], vertical_steerer_names: Sequ
         await orbit.connect()
     asyncio.run(_connect())
 
-    print(f"{orbit.count.name=}")
+    async  def _print():
+        print(await orbit.describe())
+        print(await orbit.read())
+    # asyncio.run(_print())
+
+    # print(f"{orbit.count.name=}")
 
     # todo: should be handled internally, needs to be overriden ?
     actuators = {name: pc for name, pc in steerers.settable_devices.items()}

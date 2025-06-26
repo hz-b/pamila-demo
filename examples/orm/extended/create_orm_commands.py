@@ -1,17 +1,12 @@
 import itertools
 
-from pamila_demo.bl.yellow_pages import yellow_pages
-from src.pamila_demo.model.command import BehaviourOnError, Command
-from src.pamila_demo.bl.io.command_sequence_exporter import export_commands
+from pamila_demo.bl.io.command_sequence_exporter import export_commands
+from pamila_demo.bl.liasion_translator_setup import load_managers
+from pamila_demo.model.command import BehaviourOnError, Command
 
-# from bact_twin_architecture.data_model.command import Command, BehaviourOnError
+yp, _, __  = load_managers()
 
-# from bact_twin_bessyii_impl.bl.bessyii_yellow_pages import bessyii_yellow_pages
-# from bact_twin_bessyii_impl.bl.io.command_sequence_exporter import export_commands
-
-yp = yellow_pages()
-
-#todo: provided by client
+# todo: provided by client
 measurement_values = [0, 1e-5, 0, -1e-5, 0]
 commands = [
     Command(

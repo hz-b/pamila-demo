@@ -1,4 +1,4 @@
-from ophyd_async.core import StandardReadable
+from ophyd_async.core import StandardReadable, AsyncStatus
 from ophyd_async.epics.core import epics_signal_r
 
 
@@ -8,12 +8,11 @@ class TuneSignal(StandardReadable):
             self.sig = epics_signal_r(float, f"{prefix}:tune")
         super().__init__(name=name)
 
+    @AsyncStatus.wrap
     async def read(self):
         # Wait for new tune data to arrive
-        async with self.sig.subscribe() as updates:
-            async for value in updates:
-                break
-        return super().read()
+        await self.sig.get_value(cached=False)
+        return await super().read()
 
 
 class Tunes(StandardReadable):

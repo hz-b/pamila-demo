@@ -4,7 +4,7 @@ import logging
 from urllib.parse import quote_plus
 import os
 
-logger = logging.getLogger("bact-twin-bessyii-impl")
+logger = logging.getLogger("pamila-demo")
 
 
 def config(mod_name):

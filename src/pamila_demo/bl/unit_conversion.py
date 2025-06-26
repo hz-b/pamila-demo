@@ -3,7 +3,7 @@ import logging
 
 from pamila_demo.interfaces.state_conversion import StateConversion
 
-logger = logging.getLogger("bact-twin-architecture")
+logger = logging.getLogger("pamila-demo")
 
 
 class UnitConversion(StateConversion):

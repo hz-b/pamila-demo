@@ -30,8 +30,9 @@ databroker = "*"
 matplotlib = "*"
 pyqt5 = "*"
 
+
 # providing multiplexer tool
-bact_bessyii_mls_ophyd = "*>=0.2.0"
+bact_bessyii_mls_ophyd = ">=0.2.0"
 # doc packages
 Sphinx = { version = ">=4.2", optional = true }
 sphinx-rtd-theme = { version = ">=1", optional = true }

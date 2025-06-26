@@ -3,10 +3,9 @@
 import asyncio
 from typing import Sequence
 
-from bact_bessyii_mls_ophyd.devices.pp.orbit import PPOrbit
-from bact_bessyii_mls_ophyd.devices.utils.multiplexer_for_settable_devices import (
-    MultiplexerProxy,
-)
+from pamila_demo.custom.bessyii.orbit import PPOrbit
+from pamila_demo.custom.epics.mexec.multiplexer_for_settable_devices import MultiplexerProxy
+
 from .master_clock import MasterClock
 from .tunes import Tunes
 
@@ -75,7 +74,7 @@ def setup(device_ids: Sequence[str], prefix="Anonym:"):
         ItemProxy=MultiplexerItemProxy,
     )
 
-    orbit = PPOrbit(f"{prefix}MDIZ2T5G:", name="orbit")
+    orbit = PPOrbit(f"{prefix}ORBITCC:", name="orbit")
     master_clock = MasterClock(f'{prefix}{special_pvs["master_clock"]}', name="mc")
     tunes = Tunes(f"{prefix}beam:twiss", name="tune")
     async def connect():

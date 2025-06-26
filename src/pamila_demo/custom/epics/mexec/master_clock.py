@@ -1,11 +1,9 @@
 from typing import List
 
-from bact_bessyii_mls_ophyd.devices.utils.pv_positioner_like_utils import (
-    PVPositionerIsClose,
-)
+from .pv_positioner_like_utils import PVPositionerIsClose
+
 from .diff_channel import DiffChannel
-from bluesky.protocols import Movable, Status
-from ophyd_async.core import AsyncStatus, StandardReadable
+from ophyd_async.core import StandardReadable
 
 
 class MasterClock(StandardReadable):

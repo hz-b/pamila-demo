@@ -1,9 +1,6 @@
-from bact_bessyii_mls_ophyd.devices.utils.multiplexer_for_settable_devices import (
-    _MultiplexerItemProxy,
-)
-from bact_bessyii_mls_ophyd.devices.utils.pv_positioner_like_utils import PVPositionerIsClose
 from .diff_channel import DiffChannel
-
+from .multiplexer_for_settable_devices import _MultiplexerItemProxy
+from .pv_positioner_like_utils import PVPositionerIsClose
 
 
 class MultiplexerItemProxy(_MultiplexerItemProxy):
